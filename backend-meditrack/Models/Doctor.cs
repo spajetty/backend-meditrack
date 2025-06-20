@@ -14,6 +14,9 @@ namespace backend_meditrack.Models
 
         [Required]
         public string Specialty { get; set; }
+        [Required]
+
+        public string PasswordHash { get; set; }
 
         public ICollection<Patient> Patients { get; set; }
     }

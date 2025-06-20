@@ -17,6 +17,9 @@ namespace backend_meditrack.Models
         [Required]
         public int DoctorId { get; set; }
 
+        [Required]
+        public string PasswordHash { get; set; }
+
         public Doctor? Doctor { get; set; }  // ← ⚠️ Make this nullable with `?`
 
         public ICollection<Prescription>? Prescriptions { get; set; }  // ← ⚠️ Also nullable
