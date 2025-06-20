@@ -14,10 +14,12 @@ namespace backend_meditrack.Models
 
         public DateTime DateOfBirth { get; set; }
 
+        [Required]
         public int DoctorId { get; set; }
-        public Doctor Doctor { get; set; }
 
-        public ICollection<Prescription> Prescriptions { get; set; }
+        public Doctor? Doctor { get; set; }  // ← ⚠️ Make this nullable with `?`
+
+        public ICollection<Prescription>? Prescriptions { get; set; }  // ← ⚠️ Also nullable
     }
 
 }

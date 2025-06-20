@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 namespace backend_meditrack.Data
 {
     public class ClinicDbContextFactory : IDesignTimeDbContextFactory<ClinicDbContext>
-    {
+    {   
         public ClinicDbContext CreateDbContext(string[] args)
         {
             var config = new ConfigurationBuilder()
