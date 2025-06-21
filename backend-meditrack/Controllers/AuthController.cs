@@ -111,9 +111,16 @@ namespace backend_meditrack.Controllers
             return Ok(matches);
         }
 
+        [HttpGet("check-email")]
+        public async Task<IActionResult> CheckEmail([FromQuery] string email)
+        {
+            var exists = await _context.Patients.AnyAsync(p => p.Email == email) ||
+                         await _context.Doctors.AnyAsync(d => d.Email == email);
+
+            return Ok(exists);
+        }
+
     }
-
-
 
     // ✅ DTO Classes
     public class RegisterDto
