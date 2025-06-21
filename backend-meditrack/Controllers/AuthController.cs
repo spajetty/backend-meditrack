@@ -25,6 +25,10 @@ namespace backend_meditrack.Controllers
             if (await _context.Patients.AnyAsync(p => p.Email == dto.Email))
                 return BadRequest("Email already registered.");
 
+            var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == dto.DoctorId);
+            if (!doctorExists)
+                return BadRequest("Selected doctor does not exist.");
+
             var patient = new Patient
             {
                 FullName = dto.FullName,
@@ -90,7 +94,26 @@ namespace backend_meditrack.Controllers
 
             return Ok("Doctor login successful.");
         }
+
+
+        [HttpGet("search-doctors")]
+        public async Task<IActionResult> SearchDoctors([FromQuery] string query)
+        {
+            var matches = await _context.Doctors
+                .Where(d => d.FullName.Contains(query))
+                .Select(d => new { d.DoctorId, d.FullName })
+                .Take(10)
+                .ToListAsync();
+
+            if (matches.Count == 0)
+                return NotFound("No matching doctors found.");
+
+            return Ok(matches);
+        }
+
     }
+
+
 
     // ✅ DTO Classes
     public class RegisterDto
