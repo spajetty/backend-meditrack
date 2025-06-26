@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend_meditrack.Data
 {
-    public class ClinicDbContext : DbContext
+    public class ClinicDBContext : DbContext
     {
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
@@ -12,7 +12,7 @@ namespace backend_meditrack.Data
         public DbSet<PrescriptionTime> PrescriptionTimes { get; set; }
         public DbSet<DoseLog> DoseLogs { get; set; }
 
-        public ClinicDbContext(DbContextOptions<ClinicDbContext> options) : base(options) { }
+        public ClinicDBContext(DbContextOptions<ClinicDBContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

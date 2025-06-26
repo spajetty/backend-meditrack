@@ -10,10 +10,10 @@ namespace backend_meditrack.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly ClinicDbContext _context;
+        private readonly ClinicDBContext _context;
         private readonly PasswordHasher<string> _passwordHasher = new();
 
-        public AuthController(ClinicDbContext context)
+        public AuthController(ClinicDBContext context)
         {
             _context = context;
         }

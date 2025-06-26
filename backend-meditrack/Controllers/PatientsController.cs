@@ -9,9 +9,9 @@ namespace backend_meditrack.Controllers
     [Route("api/[controller]")]
     public class PatientsController : ControllerBase
     {
-        private readonly ClinicDbContext _context;
+        private readonly ClinicDBContext _context;
 
-        public PatientsController(ClinicDbContext context)
+        public PatientsController(ClinicDBContext context)
         {
             _context = context;
         }
