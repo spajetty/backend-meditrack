@@ -53,5 +53,23 @@ namespace backend_meditrack.Controllers
 
             return CreatedAtAction(nameof(GetPatient), new { id = patient.PatientId }, patient);
         }
+
+        // ✅ PUT /api/patients/{id} (Update Patient Profile)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient updatedPatient)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+                return NotFound();
+
+            patient.FullName = updatedPatient.FullName;
+            patient.Email = updatedPatient.Email;
+            patient.DateOfBirth = updatedPatient.DateOfBirth;
+
+            _context.Entry(patient).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok(patient);
+        }
     }
 }
