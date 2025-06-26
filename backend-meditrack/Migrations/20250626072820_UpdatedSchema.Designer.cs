@@ -12,8 +12,8 @@ using backend_meditrack.Data;
 namespace backend_meditrack.Migrations
 {
     [DbContext(typeof(ClinicDBContext))]
-    [Migration("20250626050324_AddDoseStatus")]
-    partial class AddDoseStatus
+    [Migration("20250626072820_UpdatedSchema")]
+    partial class UpdatedSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -67,6 +67,9 @@ namespace backend_meditrack.Migrations
 
                     b.Property<DateTime>("ScheduledDateTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TakenTime")
                         .HasColumnType("datetime2");

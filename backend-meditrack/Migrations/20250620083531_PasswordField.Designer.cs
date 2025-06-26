@@ -11,7 +11,7 @@ using backend_meditrack.Data;
 
 namespace backend_meditrack.Migrations
 {
-    [DbContext(typeof(ClinicDbContext))]
+    [DbContext(typeof(ClinicDBContext))]
     [Migration("20250620083531_PasswordField")]
     partial class PasswordField
     {

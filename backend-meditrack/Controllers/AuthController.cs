@@ -56,7 +56,14 @@ namespace backend_meditrack.Controllers
             if (result != PasswordVerificationResult.Success)
                 return Unauthorized("Invalid email or password.");
 
-            return Ok("Patient login successful.");
+            return Ok(new
+            {
+                patientId = patient.PatientId,
+                fullName = patient.FullName,
+                email = patient.Email,
+                role = "patient"
+            });
+
         }
 
         // ✅ Doctor Registration
@@ -92,7 +99,15 @@ namespace backend_meditrack.Controllers
             if (result != PasswordVerificationResult.Success)
                 return Unauthorized("Invalid email or password.");
 
-            return Ok("Doctor login successful.");
+            return Ok(new
+            {
+                doctorId = doctor.DoctorId,
+                fullName = doctor.FullName,
+                email = doctor.Email,
+                specialty = doctor.Specialty,
+                role = "doctor"
+            });
+
         }
 
 

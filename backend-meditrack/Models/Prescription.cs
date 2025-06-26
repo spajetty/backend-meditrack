@@ -14,7 +14,6 @@ namespace backend_meditrack.Models
 
         public int PatientId { get; set; }
         public Patient Patient { get; set; }
-
         public ICollection<PrescriptionDay> PrescriptionDays { get; set; }
         public ICollection<PrescriptionTime> PrescriptionTimes { get; set; }
         public ICollection<DoseLog> DoseLogs { get; set; }

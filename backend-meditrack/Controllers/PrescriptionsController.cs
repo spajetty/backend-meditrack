@@ -17,23 +17,26 @@ namespace backend_meditrack.Controllers
         }
 
         [HttpGet("{patientId}")]
-        public async Task<ActionResult<IEnumerable<Prescription>>> GetPrescriptions(int patientId)
+        public async Task<IActionResult> GetPrescriptions(int patientId)
         {
-            return await _context.Prescriptions
-                .Where(p => p.PatientId == patientId)
-                .Include(p => p.PrescriptionDays)
-                .Include(p => p.PrescriptionTimes)
-                .Include(p => p.DoseLogs)
-                .ToListAsync();
+            try
+            {
+                var prescriptions = await _context.Prescriptions
+                    .Where(p => p.PatientId == patientId)
+                    .Include(p => p.PrescriptionDays)
+                    .Include(p => p.PrescriptionTimes)
+                    .Include(p => p.DoseLogs)
+                    .ToListAsync();
+
+                return Ok(prescriptions);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("🔥 ERROR: " + ex.ToString());
+                return StatusCode(500, ex.Message); // return full error to frontend for now
+            }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddPrescription(Prescription prescription)
-        {
-            _context.Prescriptions.Add(prescription);
-            await _context.SaveChangesAsync();
-            return Ok(prescription);
-        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePrescription(int id)
@@ -45,6 +48,33 @@ namespace backend_meditrack.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost]
+        [HttpPost]
+        public async Task<IActionResult> AddPrescription([FromBody] PrescriptionDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var prescription = new Prescription
+            {
+                MedicineName = dto.MedicineName,
+                Instruction = dto.Instruction,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                IsRecurring = dto.IsRecurring,
+                RecurringIntervalHours = dto.IsRecurring ? dto.RecurringIntervalHours : null,
+                PatientId = dto.PatientId,
+                PrescriptionDays = null,
+                PrescriptionTimes = null,
+                DoseLogs = null
+            };
+
+            _context.Prescriptions.Add(prescription);
+            await _context.SaveChangesAsync();
+
+            return Ok(prescription);
         }
     }
 

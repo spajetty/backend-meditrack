@@ -10,8 +10,8 @@ using backend_meditrack.Data;
 
 namespace backend_meditrack.Migrations
 {
-    [DbContext(typeof(ClinicDbContext))]
-    partial class ClinicDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(ClinicDBContext))]
+    partial class ClinicDBContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -64,6 +64,9 @@ namespace backend_meditrack.Migrations
 
                     b.Property<DateTime>("ScheduledDateTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("TakenTime")
                         .HasColumnType("datetime2");
