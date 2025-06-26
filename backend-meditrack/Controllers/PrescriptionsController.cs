@@ -51,7 +51,6 @@ namespace backend_meditrack.Controllers
         }
 
         [HttpPost]
-        [HttpPost]
         public async Task<IActionResult> AddPrescription([FromBody] PrescriptionDTO dto)
         {
             if (!ModelState.IsValid)
@@ -64,12 +63,37 @@ namespace backend_meditrack.Controllers
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 IsRecurring = dto.IsRecurring,
-                RecurringIntervalHours = dto.IsRecurring ? dto.RecurringIntervalHours : null,
                 PatientId = dto.PatientId,
-                PrescriptionDays = null,
-                PrescriptionTimes = null,
-                DoseLogs = null
+                PrescriptionDays = new List<PrescriptionDay>(),
+                PrescriptionTimes = new List<PrescriptionTime>()
             };
+
+            // Add times
+            if (dto.Times != null && dto.Times.Any())
+            {
+                foreach (var timeStr in dto.Times)
+                {
+                    if (TimeSpan.TryParse(timeStr, out var time))
+                    {
+                        prescription.PrescriptionTimes.Add(new PrescriptionTime
+                        {
+                            TimeOfDay = time
+                        });
+                    }
+                }
+            }
+
+            // Add days (only if not recurring)
+            if (!dto.IsRecurring && dto.Days != null && dto.Days.Any())
+            {
+                foreach (var day in dto.Days)
+                {
+                    prescription.PrescriptionDays.Add(new PrescriptionDay
+                    {
+                        DayOfWeek = (DayOfWeek)day
+                    });
+                }
+            }
 
             _context.Prescriptions.Add(prescription);
             await _context.SaveChangesAsync();
