@@ -37,6 +37,62 @@ namespace backend_meditrack.Controllers
             }
         }
 
+        [HttpGet("today/{patientId}")]
+        public async Task<IActionResult> GetTodayLogs(int patientId)
+        {
+            var today = DateTime.Today;
+            var now = DateTime.Now;
+
+            var prescriptions = await _context.Prescriptions
+                .Where(p => p.PatientId == patientId && p.StartDate <= today && p.EndDate >= today)
+                .Include(p => p.PrescriptionTimes)
+                .Include(p => p.PrescriptionDays)
+                .Include(p => p.DoseLogs)
+                .ToListAsync();
+
+            var logsToReturn = new List<DoseLog>();
+
+            foreach (var p in prescriptions)
+            {
+                var times = p.PrescriptionTimes
+                    .Select(pt => today.Add(pt.TimeOfDay))
+                    .ToList();
+
+                foreach (var scheduledDt in times)
+                {
+                    var existing = p.DoseLogs
+                        .FirstOrDefault(dl => dl.ScheduledDateTime == scheduledDt);
+
+                    if (existing == null)
+                    {
+                        // Add new log with default status = Pending
+                        existing = new DoseLog
+                        {
+                            PrescriptionId = p.PrescriptionId,
+                            ScheduledDateTime = scheduledDt,
+                            Status = DoseStatus.Pending
+                        };
+                        _context.DoseLogs.Add(existing);
+                        await _context.SaveChangesAsync();
+
+                        p.DoseLogs.Add(existing);
+                    }
+
+                    // Auto-mark missed doses
+                    if (existing.Status == DoseStatus.Pending && scheduledDt < now && existing.TakenTime == null)
+                    {
+                        existing.Status = DoseStatus.Missed;
+                        await _context.SaveChangesAsync();
+                    }
+
+                    logsToReturn.Add(existing);
+                }
+            }
+
+            return Ok(logsToReturn
+                .Where(l => l.ScheduledDateTime.Date == today)
+                .ToList());
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePrescription(int id)
