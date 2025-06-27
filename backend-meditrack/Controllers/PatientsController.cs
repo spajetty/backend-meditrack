@@ -23,11 +23,14 @@ namespace backend_meditrack.Controllers
             return await _context.Patients.ToListAsync();
         }
 
-        // ✅ GET /api/patients/{id}
+        // ✅ GET /api/patients/{id} with Doctor Details
         [HttpGet("{id}")]
         public async Task<ActionResult<Patient>> GetPatient(int id)
         {
-            var patient = await _context.Patients.FindAsync(id);
+            var patient = await _context.Patients
+                .Include(p => p.Doctor)
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
             if (patient == null)
                 return NotFound();
 
