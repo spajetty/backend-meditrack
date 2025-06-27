@@ -74,5 +74,19 @@ namespace backend_meditrack.Controllers
 
             return Ok(patient);
         }
+
+        // ✅ DELETE /api/patients/{id} (Delete Patient Profile)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+                return NotFound();
+
+            _context.Patients.Remove(patient);
+            await _context.SaveChangesAsync();
+
+            return Ok($"Patient with ID {id} deleted.");
+        }
     }
 }
