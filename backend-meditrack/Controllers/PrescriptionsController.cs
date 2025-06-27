@@ -37,6 +37,40 @@ namespace backend_meditrack.Controllers
             }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePrescription(int id, [FromBody] Prescription updated)
+        {
+            if (id != updated.PrescriptionId)
+                return BadRequest("Mismatched ID");
+
+            var existing = await _context.Prescriptions
+                .Include(p => p.PrescriptionDays)
+                .Include(p => p.PrescriptionTimes)
+                .FirstOrDefaultAsync(p => p.PrescriptionId == id);
+
+            if (existing == null)
+                return NotFound();
+
+            // Update core fields
+            existing.MedicineName = updated.MedicineName;
+            existing.Instruction = updated.Instruction;
+            existing.StartDate = updated.StartDate;
+            existing.EndDate = updated.EndDate;
+
+            // Update prescription times
+            _context.PrescriptionTimes.RemoveRange(existing.PrescriptionTimes);
+            existing.PrescriptionTimes = updated.PrescriptionTimes;
+
+            // Update prescription days
+            _context.PrescriptionDays.RemoveRange(existing.PrescriptionDays);
+            existing.PrescriptionDays = updated.PrescriptionDays;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(existing);
+        }
+
+
         [HttpGet("today/{patientId}")]
         public async Task<IActionResult> GetTodayLogs(int patientId)
         {
