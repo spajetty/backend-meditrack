@@ -38,38 +38,56 @@ namespace backend_meditrack.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePrescription(int id, [FromBody] Prescription updated)
+        public async Task<IActionResult> UpdatePrescription(int id, [FromBody] PrescriptionDTO dto)
         {
-            if (id != updated.PrescriptionId)
-                return BadRequest("Mismatched ID");
+            try
+            {
+                var existing = await _context.Prescriptions
+                    .Include(p => p.PrescriptionDays)
+                    .Include(p => p.PrescriptionTimes)
+                    .FirstOrDefaultAsync(p => p.PrescriptionId == id);
 
-            var existing = await _context.Prescriptions
-                .Include(p => p.PrescriptionDays)
-                .Include(p => p.PrescriptionTimes)
-                .FirstOrDefaultAsync(p => p.PrescriptionId == id);
+                if (existing == null)
+                    return NotFound();
 
-            if (existing == null)
-                return NotFound();
+                existing.MedicineName = dto.MedicineName;
+                existing.Instruction = dto.Instruction;
+                existing.StartDate = dto.StartDate;
+                existing.EndDate = dto.EndDate;
+                existing.IsRecurring = dto.IsRecurring;
 
-            // Update core fields
-            existing.MedicineName = updated.MedicineName;
-            existing.Instruction = updated.Instruction;
-            existing.StartDate = updated.StartDate;
-            existing.EndDate = updated.EndDate;
+                // Remove old times and days
+                _context.PrescriptionDays.RemoveRange(existing.PrescriptionDays);
+                _context.PrescriptionTimes.RemoveRange(existing.PrescriptionTimes);
 
-            // Update prescription times
-            _context.PrescriptionTimes.RemoveRange(existing.PrescriptionTimes);
-            existing.PrescriptionTimes = updated.PrescriptionTimes;
+                // Add updated days
+                if (!dto.IsRecurring && dto.Days != null)
+                {
+                    existing.PrescriptionDays = dto.Days.Select(d => new PrescriptionDay
+                    {
+                        DayOfWeek = (DayOfWeek)d
+                    }).ToList();
+                }
 
-            // Update prescription days
-            _context.PrescriptionDays.RemoveRange(existing.PrescriptionDays);
-            existing.PrescriptionDays = updated.PrescriptionDays;
+                // Add updated times
+                if (dto.Times != null)
+                {
+                    existing.PrescriptionTimes = dto.Times.Select(t => new PrescriptionTime
+                    {
+                        TimeOfDay = TimeSpan.Parse(t)
+                    }).ToList();
+                }
 
-            await _context.SaveChangesAsync();
-
-            return Ok(existing);
+                await _context.SaveChangesAsync();
+                return Ok(existing);
+            }
+            catch (Exception ex)
+            {
+                // Log to console
+                Console.WriteLine("Update error: " + ex.Message);
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
-
 
         [HttpGet("today/{patientId}")]
         public async Task<IActionResult> GetTodayLogs(int patientId)
