@@ -37,6 +37,19 @@ namespace backend_meditrack.Controllers
             return patient;
         }
 
+        // ✅ GET /api/patients/doctor/{doctorId} → Get all patients for a specific doctor
+        [HttpGet("doctor/{doctorId}")]
+        public async Task<ActionResult<IEnumerable<Patient>>> GetPatientsByDoctor(int doctorId)
+        {
+            var patients = await _context.Patients
+                .Where(p => p.DoctorId == doctorId)
+                .Include(p => p.Doctor)
+                .ToListAsync();
+
+            return patients;
+        }
+
+
         // ✅ POST /api/patients
         [HttpPost]
         public async Task<IActionResult> AddPatient([FromBody] Patient patient)
