@@ -35,5 +35,20 @@ namespace backend_meditrack.Controllers
             await _context.SaveChangesAsync();
             return Ok(log);
         }
+
+        [HttpPost("undo/{doseLogId}")]
+        public async Task<IActionResult> UndoDose(int doseLogId)
+        {
+            var log = await _context.DoseLogs.FindAsync(doseLogId);
+            if (log == null)
+                return NotFound();
+
+            log.TakenTime = null;
+            log.Status = DoseStatus.Pending;
+
+            await _context.SaveChangesAsync();
+            return Ok(log);
+        }
+
     }
 }
