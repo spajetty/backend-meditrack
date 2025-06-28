@@ -52,6 +52,7 @@ namespace backend_meditrack.Controllers
 
                 existing.MedicineName = dto.MedicineName;
                 existing.Instruction = dto.Instruction;
+                existing.Dosage = dto.Dosage;
                 existing.StartDate = dto.StartDate;
                 existing.EndDate = dto.EndDate;
                 existing.IsRecurring = dto.IsRecurring;
@@ -168,6 +169,7 @@ namespace backend_meditrack.Controllers
             {
                 MedicineName = dto.MedicineName,
                 Instruction = dto.Instruction,
+                Dosage = dto.Dosage,
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 IsRecurring = dto.IsRecurring,

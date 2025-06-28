@@ -4,6 +4,7 @@
     {
         public string MedicineName { get; set; }
         public string Instruction { get; set; }
+        public string Dosage { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsRecurring { get; set; } // true = daily, false = specific days
