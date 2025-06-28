@@ -25,9 +25,10 @@ namespace backend_meditrack.Controllers
             if (log == null)
                 return NotFound();
 
-            if (log.Status == DoseStatus.Taken || log.Status == DoseStatus.Missed)
-                return BadRequest("Dose already marked.");
+            if (log.Status == DoseStatus.Taken)
+                return BadRequest("Dose already marked as taken.");
 
+            // Allow updating even if missed
             log.TakenTime = DateTime.Now;
             log.Status = DoseStatus.Taken;
 
