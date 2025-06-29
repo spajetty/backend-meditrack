@@ -61,5 +61,25 @@ namespace backend_meditrack.Controllers
             return Ok(logs);
         }
 
+        // GET: api/doselog/history/{prescriptionId}
+        [HttpGet("history/{prescriptionId}")]
+        public async Task<IActionResult> GetDoseHistory(int prescriptionId)
+        {
+            try
+            {
+                var logs = await _context.DoseLogs
+                    .Where(dl => dl.PrescriptionId == prescriptionId &&
+                                 dl.Status != DoseStatus.Pending) // Only Taken or Missed
+                    .OrderBy(dl => dl.ScheduledDateTime)
+                    .ToListAsync();
+
+                return Ok(logs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("History fetch error: " + ex.Message);
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
     }
 }
