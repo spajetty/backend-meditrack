@@ -70,7 +70,6 @@ namespace backend_meditrack.Controllers
             return CreatedAtAction(nameof(GetPatient), new { id = patient.PatientId }, patient);
         }
 
-        // ✅ PUT /api/patients/{id} (Update Patient Profile)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient updatedPatient)
         {
@@ -82,11 +81,22 @@ namespace backend_meditrack.Controllers
             patient.Email = updatedPatient.Email;
             patient.DateOfBirth = updatedPatient.DateOfBirth;
 
+            // ✅ Check if DoctorId is being updated
+            if (updatedPatient.DoctorId != null && updatedPatient.DoctorId != patient.DoctorId)
+            {
+                var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == updatedPatient.DoctorId);
+                if (!doctorExists)
+                    return BadRequest($"Doctor with ID {updatedPatient.DoctorId} does not exist.");
+
+                patient.DoctorId = updatedPatient.DoctorId;
+            }
+
             _context.Entry(patient).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return Ok(patient);
         }
+
 
         // ✅ DELETE /api/patients/{id} (Delete Patient Profile)
         [HttpDelete("{id}")]
