@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace backend_meditrack.Controllers
 {
     [ApiController]
-    [Route("api/doselogs")]
+    [Route("api/doselog")]
     public class DoseLogController : ControllerBase
     {
         private readonly ClinicDBContext _context;
