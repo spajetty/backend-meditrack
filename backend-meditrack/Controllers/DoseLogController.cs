@@ -1,6 +1,8 @@
 ﻿using backend_meditrack.Data;
+using backend_meditrack.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace backend_meditrack.Controllers
 {
@@ -15,43 +17,69 @@ namespace backend_meditrack.Controllers
             _context = context;
         }
 
-        // Test endpoint
-        [HttpGet]
-        public IActionResult TestEndpoint()
+        // POST: api/doselog/mark-taken/5
+        [HttpPost("mark-taken/{doseLogId}")]
+        public async Task<IActionResult> MarkDoseAsTaken(int doseLogId)
         {
-            return Ok("DoseLogs controller working!");
+            var log = await _context.DoseLogs.FindAsync(doseLogId);
+            if (log == null)
+                return NotFound();
+
+            if (log.Status == DoseStatus.Taken)
+                return BadRequest("Dose already marked as taken.");
+
+            // Allow updating even if missed
+            log.TakenTime = DateTime.Now;
+            log.Status = DoseStatus.Taken;
+
+            await _context.SaveChangesAsync();
+            return Ok(log);
         }
 
-        [HttpGet("patient/{patientId}")]
-        public async Task<IActionResult> GetDoseLogsByPatient(int patientId)
+        [HttpPost("undo/{doseLogId}")]
+        public async Task<IActionResult> UndoDose(int doseLogId)
         {
-            Console.WriteLine($"Fetching dose logs for patientId: {patientId}");
+            var log = await _context.DoseLogs.FindAsync(doseLogId);
+            if (log == null)
+                return NotFound();
 
-            var doseLogs = await _context.DoseLogs
-                .Include(dl => dl.Prescription)  // 👈 This is the important fix
-                .Where(dl => dl.Prescription != null && dl.Prescription.PatientId == patientId)
-                .OrderByDescending(dl => dl.ScheduledDateTime)
+            log.TakenTime = null;
+            log.Status = DoseStatus.Pending;
+
+            await _context.SaveChangesAsync();
+            return Ok(log);
+        }
+
+        [HttpGet("history/{prescriptionId}")]
+        public async Task<IActionResult> GetHistoryForPrescription(int prescriptionId)
+        {
+            var logs = await _context.DoseLogs
+                .Where(dl => dl.PrescriptionId == prescriptionId)
+                .OrderBy(dl => dl.ScheduledDateTime)
                 .ToListAsync();
 
-            var formattedData = doseLogs.Select(dl => new
-            {
-                Id = dl.DoseLogId,
-                Date = dl.ScheduledDateTime.Date.ToString("yyyy-MM-dd"),
-                Time = dl.ScheduledDateTime.ToString("hh:mm tt"),
-                MedicineName = dl.Prescription.MedicineName,
-                Dosage = dl.Prescription.Instruction,
-                Status = dl.Status.ToString(),
-                Notes = "",
-                Effectiveness = 0
-            });
-
-            return Ok(formattedData);
+            return Ok(logs);
         }
 
+        // GET: api/doselog/history/{prescriptionId}
+        [HttpGet("history/{prescriptionId}")]
+        public async Task<IActionResult> GetDoseHistory(int prescriptionId)
+        {
+            try
+            {
+                var logs = await _context.DoseLogs
+                    .Where(dl => dl.PrescriptionId == prescriptionId &&
+                                 dl.Status != DoseStatus.Pending) // Only Taken or Missed
+                    .OrderBy(dl => dl.ScheduledDateTime)
+                    .ToListAsync();
 
-
-
-
-
+                return Ok(logs);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("History fetch error: " + ex.Message);
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
     }
 }
