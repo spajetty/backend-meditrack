@@ -50,6 +50,19 @@ namespace backend_meditrack.Controllers
             return Ok(log);
         }
 
+        // GET: api/doselog/patient/{patientId}
+        [HttpGet("patient/{patientId}")]
+        public async Task<IActionResult> GetDoseLogsByPatient(int patientId)
+        {
+            var logs = await _context.DoseLogs
+                .Include(dl => dl.Prescription)
+                .Where(dl => dl.Prescription.PatientId == patientId)
+                .OrderBy(dl => dl.ScheduledDateTime)
+                .ToListAsync();
+
+            return Ok(logs);
+        }
+
         // GET: api/doselog/history/{prescriptionId}
         [HttpGet("history/{prescriptionId}")]
         public async Task<IActionResult> GetDoseHistory(int prescriptionId)
