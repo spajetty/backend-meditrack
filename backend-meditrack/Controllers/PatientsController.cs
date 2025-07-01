@@ -23,16 +23,32 @@ namespace backend_meditrack.Controllers
             return await _context.Patients.ToListAsync();
         }
 
-        // ✅ GET /api/patients/{id}
+        // ✅ GET /api/patients/{id} with Doctor Details
         [HttpGet("{id}")]
         public async Task<ActionResult<Patient>> GetPatient(int id)
         {
-            var patient = await _context.Patients.FindAsync(id);
+            var patient = await _context.Patients
+                .Include(p => p.Doctor)
+                .FirstOrDefaultAsync(p => p.PatientId == id);
+
             if (patient == null)
                 return NotFound();
 
             return patient;
         }
+
+        // ✅ GET /api/patients/doctor/{doctorId} → Get all patients for a specific doctor
+        [HttpGet("doctor/{doctorId}")]
+        public async Task<ActionResult<IEnumerable<Patient>>> GetPatientsByDoctor(int doctorId)
+        {
+            var patients = await _context.Patients
+                .Where(p => p.DoctorId == doctorId)
+                .Include(p => p.Doctor)
+                .ToListAsync();
+
+            return patients;
+        }
+
 
         // ✅ POST /api/patients
         [HttpPost]
@@ -54,7 +70,6 @@ namespace backend_meditrack.Controllers
             return CreatedAtAction(nameof(GetPatient), new { id = patient.PatientId }, patient);
         }
 
-        // ✅ PUT /api/patients/{id} (Update Patient Profile)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient updatedPatient)
         {
@@ -66,10 +81,35 @@ namespace backend_meditrack.Controllers
             patient.Email = updatedPatient.Email;
             patient.DateOfBirth = updatedPatient.DateOfBirth;
 
+            // ✅ Check if DoctorId is being updated
+            if (updatedPatient.DoctorId != null && updatedPatient.DoctorId != patient.DoctorId)
+            {
+                var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == updatedPatient.DoctorId);
+                if (!doctorExists)
+                    return BadRequest($"Doctor with ID {updatedPatient.DoctorId} does not exist.");
+
+                patient.DoctorId = updatedPatient.DoctorId;
+            }
+
             _context.Entry(patient).State = EntityState.Modified;
             await _context.SaveChangesAsync();
 
             return Ok(patient);
+        }
+
+
+        // ✅ DELETE /api/patients/{id} (Delete Patient Profile)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+                return NotFound();
+
+            _context.Patients.Remove(patient);
+            await _context.SaveChangesAsync();
+
+            return Ok($"Patient with ID {id} deleted.");
         }
     }
 }
