@@ -210,6 +210,17 @@ namespace backend_meditrack.Controllers
 
             return Ok(prescription);
         }
+
+        [HttpGet("details/{id}")]
+        public async Task<IActionResult> GetPrescriptionById(int id)
+        {
+            var prescription = await _context.Prescriptions.FindAsync(id);
+            if (prescription == null)
+                return NotFound();
+
+            return Ok(prescription);
+        }
+
     }
 
 }
