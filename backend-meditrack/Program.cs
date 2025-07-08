@@ -11,7 +11,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:5173",
-            "https://frontend-meditrack.vercel.app" // ✅ Add Vercel URL here
+            "https://meditrack-web-app.vercel.app" // ✅ Add Vercel URL here
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
