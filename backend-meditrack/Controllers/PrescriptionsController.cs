@@ -93,8 +93,13 @@ namespace backend_meditrack.Controllers
         [HttpGet("today/{patientId}")]
         public async Task<IActionResult> GetTodayLogs(int patientId)
         {
-            var today = DateTime.Today;
-            var now = DateTime.Now;
+            // Use Philippines timezone (UTC+8)
+            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+            DateTime now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz);
+            DateTime today = now.Date;
+
+            Console.WriteLine($"[DEBUG] Fetching today's prescriptions for patient: {patientId}");
+            Console.WriteLine($"[DEBUG] Server UTC Time: {DateTime.UtcNow}, Converted PH Time: {now}");
 
             var prescriptions = await _context.Prescriptions
                 .Where(p => p.PatientId == patientId && p.StartDate <= today && p.EndDate >= today)
@@ -104,21 +109,25 @@ namespace backend_meditrack.Controllers
                 .ToListAsync();
 
             var logsToReturn = new List<DoseLog>();
+            bool anyChanges = false;
 
             foreach (var p in prescriptions)
             {
+                Console.WriteLine($"[DEBUG] Prescription ID: {p.PrescriptionId}");
+
                 var times = p.PrescriptionTimes
                     .Select(pt => today.Add(pt.TimeOfDay))
                     .ToList();
 
                 foreach (var scheduledDt in times)
                 {
+                    Console.WriteLine($"[DEBUG] Checking scheduled dose time: {scheduledDt}");
+
                     var existing = p.DoseLogs
                         .FirstOrDefault(dl => dl.ScheduledDateTime == scheduledDt);
 
                     if (existing == null)
                     {
-                        // Add new log with default status = Pending
                         existing = new DoseLog
                         {
                             PrescriptionId = p.PrescriptionId,
@@ -126,25 +135,40 @@ namespace backend_meditrack.Controllers
                             Status = DoseStatus.Pending
                         };
                         _context.DoseLogs.Add(existing);
-                        await _context.SaveChangesAsync();
-
                         p.DoseLogs.Add(existing);
+
+                        Console.WriteLine($"[DEBUG] ➕ New dose log added for time: {scheduledDt}");
+                        anyChanges = true;
                     }
 
-                    // Auto-mark missed doses
+                    // Update status to MISSED if time passed and still pending
                     if (existing.Status == DoseStatus.Pending && scheduledDt < now && existing.TakenTime == null)
                     {
                         existing.Status = DoseStatus.Missed;
-                        await _context.SaveChangesAsync();
+                        Console.WriteLine($"[DEBUG] ❌ Marked as MISSED: {scheduledDt}");
+                        anyChanges = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] ✅ No status change: {scheduledDt} — Current Status: {existing.Status}");
                     }
 
                     logsToReturn.Add(existing);
                 }
             }
 
-            return Ok(logsToReturn
+            if (anyChanges)
+            {
+                Console.WriteLine("[DEBUG] 💾 Saving DB changes...");
+                await _context.SaveChangesAsync();
+            }
+
+            var result = logsToReturn
                 .Where(l => l.ScheduledDateTime.Date == today)
-                .ToList());
+                .ToList();
+
+            Console.WriteLine($"[DEBUG] ✅ Returning {result.Count} logs for today.");
+            return Ok(result);
         }
 
         [HttpDelete("{id}")]
